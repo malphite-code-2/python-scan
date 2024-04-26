@@ -1,7 +1,6 @@
 from hdwallet import HDWallet
 from hdwallet.symbols import BTC as SYMBOL
 from colorama import Fore , Style , Back
-from hexer import mHash
 from datetime import datetime
 import threading
 import mnemonic
