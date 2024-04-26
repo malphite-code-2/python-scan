@@ -3,6 +3,7 @@ from hdwallet.symbols import BTC as SYMBOL
 from colorama import Fore , Style , Back
 from hexer import mHash
 from datetime import datetime
+from multiprocessing import Pool
 import threading
 
 def timer() :
@@ -69,3 +70,10 @@ for i in range(cores):
     t = Thread(target = seek , args = i)
     t.start()
     t.join()
+
+if __name__ == '__main__':
+    jobs = []
+    for r in range(cores):
+        p = multiprocessing.Process(target=seek, args=(r,))
+        jobs.append(p)
+        p.start()
