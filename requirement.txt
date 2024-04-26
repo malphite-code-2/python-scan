@@ -1,3 +1,4 @@
 hdwallet
 colorama
 mnemonic
+hexer
