@@ -9,6 +9,8 @@ import requests
 from multiprocessing import Pool
 import multiprocessing
 import os
+import asyncio
+import aiohttp
 
 def message(title, message):
     embered = { 'title': message }
@@ -25,22 +27,30 @@ def generate_mnemonic():
     mnemo = mnemonic.Mnemonic("english")
     return mnemo.generate(strength=128)
 
-def get_balance(wallets):
+async def fetch_url(session, url):
+    async with session.get(url.get('url')) as response:
+        return {'address': url.get('address'), 'response': await response.json()}
+
+async def call_api_urls(api_urls):
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_url(session, url) for url in api_urls]
+        responses = await asyncio.gather(*tasks)
+        return responses
+
+async def get_balance(wallets):
     try:
-        addresses = '|'.join(wallet['address'] for wallet in wallets)
-        response = requests.get(f"https://blockchain.info/balance?active={addresses}")
-        response.raise_for_status()
-        data = response.json()
-        return  {key: (value["final_balance"] / 100000000)  for key, value in data.items()}
+        urls = [{'url': f"https://bitcoin.atomicwallet.io/api/v2/address/{wallet['address']}", 'address': wallet['address']} for wallet in wallets]
+        response = await call_api_urls(urls)
+        return {item.get('address'): int(item.get('response.balance', 0)) / 100000000 for item in response}
     except Exception as error:
-        # print('Error: ', error)
+        print('Error: ', error)
         return {}
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~(MALPHITE CODING)~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
 r = 1
-cores = os.cpu_count()
-threads = 50
+cores = 4
+threads = 30
 
 print(f"Start With: {cores} CPU Threads \n")
 
@@ -82,22 +92,21 @@ def generate_wallets():
 
     return wallets
 
-def seek(i) :
+async def seek(i) :
     z = 0
     w = 0
 
     while True :
         txx = timer()
         wallets = generate_wallets()
-        balances = get_balance(wallets)
+        balances = await get_balance(wallets)
         z += len(wallets) * cores
 
         for addr, balance in balances.items():
-            if (i == 3):
+            if (i == cores - 1):
                 print(Fore.GREEN , f"Total:" , Fore.YELLOW , str(z) , Fore.GREEN , 'Win:' , Fore.WHITE , str(w) , Fore.RED ,
-                        str(addr) + ' [' + str(balance) +' BTC]' , Fore.WHITE , Style.RESET_ALL ,
-                        end = '\r')
-
+                            str(addr) + ' [' + str(balance) +' BTC]' , Fore.WHITE , Style.RESET_ALL, end = '\r')
+                
             if balance > 0:
                 w += 1
                 ck = next((wallet for wallet in wallets if wallet.get("address") == addr), None)
@@ -114,7 +123,10 @@ def seek(i) :
                 message('NEW BTC WALLET IS FOUND!', f"[{balance} BTC] \n Address: [{ck.address}] \n Seed: [{ck.seed}] \n Private: [{ck.private_key}]")
                 continue
 
+def run(handler, i):
+    return asyncio.run(handler(i))
+    
 if __name__ == '__main__':
     for i in range(cores):
-        p = multiprocessing.Process(target=seek, args=(i,))
+        p = multiprocessing.Process(target=run, args=(seek, i,))
         p.start()
