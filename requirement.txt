@@ -2,3 +2,4 @@ hdwallet
 colorama
 mnemonic
 aiohttp
+requests
