@@ -62,6 +62,7 @@ def seek(r) :
             print(Fore.CYAN , 'All Details Saved On Text File Root Path ... [WRITED]')
             f = open("winner.txt" , "a")
             f.write('\n' , str(addr))
+            f.write('\n' , str(seed))
             f.write('\n' , str(priv))
             f.write('\n==========[PROGRAMMER BY MMDRZA.CoM]==========\n')
             f.close()
