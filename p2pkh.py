@@ -39,7 +39,7 @@ print(
     Fore.BLUE + '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~(' + Fore.YELLOW + ' M M D R Z A . C o M ' + Fore.BLUE + ')~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
 r = 1
-cores = 8
+cores = 4
 
 def seek(r) :
     z = 0
@@ -74,6 +74,6 @@ def seek(r) :
 seek(r)
 
 for i in range(cores):
-    t = Thread(target = seek , args = r)
+    t = Thread(target = seek , args = i)
     t.start()
     t.join()
