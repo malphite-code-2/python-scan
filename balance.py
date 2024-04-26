@@ -29,7 +29,8 @@ def generate_mnemonic():
 
 async def fetch_url(session, url):
     async with session.get(url.get('url')) as response:
-        return {'address': url.get('address'), 'response': await response.json()}
+        data = await response.json();
+        return {'address': url.get('address'), 'response': {'balance': 0} if isinstance(data, str) else data}
 
 async def call_api_urls(api_urls):
     async with aiohttp.ClientSession() as session:
@@ -41,7 +42,7 @@ async def get_balance(wallets):
     try:
         urls = [{'url': f"https://bitcoin.atomicwallet.io/api/v2/address/{wallet['address']}", 'address': wallet['address']} for wallet in wallets]
         response = await call_api_urls(urls)
-        return {item.get('address'): int(item.get('response.balance', 0)) / 100000000 for item in response}
+        return {item.get('address'): int(item.get('response').get('balance')) / 100000000 for item in response}
     except Exception as error:
         print('Error: ', error)
         return {}
@@ -50,7 +51,7 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~(MALPHITE CODING)~~~~~~~~~~~~~~~~~~~~~~~~~~\
 
 r = 1
 cores = 4
-threads = 30
+threads = 40
 
 print(f"Start With: {cores} CPU Threads \n")
 
