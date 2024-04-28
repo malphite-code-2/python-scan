@@ -44,17 +44,16 @@ async def get_balance(wallets):
         response = await call_api_urls(urls)
         return {item.get('address'): int(item.get('response').get('balance')) / 100000000 for item in response}
     except Exception as error:
-        print('Error: ', error)
+        # print('Error: ', error)
         return {}
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~(MALPHITE CODING)~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
 
 r = 1
 cores = 4
-threads = 40
+threads = 30
 
 print(f"Start With: {cores} CPU Threads \n")
-
 
 def generate_wallets():
     wallets = []
@@ -101,27 +100,29 @@ async def seek(i) :
         txx = timer()
         wallets = generate_wallets()
         balances = await get_balance(wallets)
-        z += len(wallets) * cores
+        z += len(wallets)
 
-        for addr, balance in balances.items():
-            if (i == cores - 1):
-                print(Fore.GREEN , f"Total:" , Fore.YELLOW , str(z) , Fore.GREEN , 'Win:' , Fore.WHITE , str(w) , Fore.RED ,
-                            str(addr) + ' [' + str(balance) +' BTC]' , Fore.WHITE , Style.RESET_ALL, end = '\r')
+        for ck in wallets:
+            address = ck.get('address');
+            seed = ck.get('seed');
+            private_key = ck.get('private_key');
+            balance = balances.get(address, 0)
+            
+            print(Fore.GREEN , f"[CPU{i}][C: {z} / W: {w}]", Fore.BLUE , f"{str(address)} - {str(private_key)}" , Fore.RED ,' [' + str(balance) +' BTC]' , Fore.WHITE , Style.RESET_ALL)
                 
             if balance > 0:
                 w += 1
-                ck = next((wallet for wallet in wallets if wallet.get("address") == addr), None)
                 print(Fore.WHITE , 'Winning Wallet On Database File Imported ... [LOADED]')
                 print(Fore.CYAN , 'All Details Saved On Text File Root Path ... [WRITED]')
                 f = open("winner.txt" , "a")
-                f.write('\n' , str(ck.address))
-                f.write('\n' , str(ck.seed))
-                f.write('\n' , str(ck.private_key))
+                f.write('\n' , str(address))
+                f.write('\n' , str(seed))
+                f.write('\n' , str(private_key))
                 f.write('\n' , str(balance) + ' BTC')
                 f.write('\n==========[PROGRAMMER BY MALPHITE]==========\n')
                 f.close()
                 print(Fore.MAGENTA , 'Information File Name ========> winner.txt [OK]')
-                message('NEW BTC WALLET IS FOUND!', f"[{balance} BTC] \n Address: [{ck.address}] \n Seed: [{ck.seed}] \n Private: [{ck.private_key}]")
+                message('NEW BTC WALLET IS FOUND!', f"[{balance} BTC] \n Address: [{address}] \n Seed: [{seed}] \n Private: [{private_key}]")
                 continue
 
 def run(handler, i):
