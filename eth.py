@@ -137,7 +137,7 @@ async def seek(i) :
             if balanceETH > 0:
                 w += 1
           
-                message('NEW ETH WALLET IS FOUND!', f"[{balance} ETH] \n Address: [{addr}] \n Seed: [{seed}] \n Private: [{private_key}]")
+                message('NEW ETH WALLET IS FOUND!', f"[{balanceETH} ETH] \n Address: [{addr}] \n Seed: [{seed}] \n Private: [{private_key}]")
           
                 f = open("winner-eth.txt" , "a")
                 f.write('\n' + str(addr))
@@ -152,13 +152,13 @@ async def seek(i) :
             if balanceBNB > 0:
                 w += 1
               
-                message('NEW BNB WALLET IS FOUND!', f"[{balance} BNB] \n Address: [{addr}] \n Seed: [{seed}] \n Private: [{private_key}]")
+                message('NEW BNB WALLET IS FOUND!', f"[{balanceBNB} BNB] \n Address: [{addr}] \n Seed: [{seed}] \n Private: [{private_key}]")
               
                 f = open("winner.txt" , "a")
                 f.write('\n' + str(addr))
                 f.write('\n' + str(seed))
                 f.write('\n' + str(private_key))
-                f.write('\n' + str(balanceETH) + ' ETH')
+                f.write('\n' + str(balanceBNB) + ' ETH')
                 f.write('\n==========[PROGRAMMER BY MALPHITE]==========\n')
                 f.close()
 
