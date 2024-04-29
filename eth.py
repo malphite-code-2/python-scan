@@ -88,7 +88,7 @@ async def get_balance(wallets):
         response = await call_api_urls(urls)
         return {item.get('address'): float(item.get('balance')) for item in response}
     except Exception as error:
-        print('Error: ', error)
+        # print('Error: ', error)
         return {}
 
 r = 1
