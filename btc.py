@@ -20,8 +20,7 @@ def timer():
     return tcx
 
 r = 1
-cores = 4
-threads = 10
+cores = 16
 
 print(f"Start With: {cores} CPU Threads \n")
 
@@ -38,8 +37,8 @@ def generate_wallets():
     hdwallet: HDWallet = HDWallet(symbol=SYMBOL)
     hdwallet.from_mnemonic(mnemonic=seed)
     priv = hdwallet.private_key()
-    addr1 = hdwallet.p2pkh_address()
-    return {"address": addr1, "seed": seed, "private_key": priv}
+    addr = hdwallet.p2pkh_address()
+    return {"address": addr, "seed": seed, "private_key": priv}
 
 def get_balance(address):
     try:
